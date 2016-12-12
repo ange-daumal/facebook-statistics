@@ -11,3 +11,13 @@ Many purpose :
 
 Please feel free to suggest us whatever you'd like to see added to
 our TODO list ;)
+
+# Requirements
+
+* Python3.5
+* packages listed in requirements.txt
+
+# Installation
+
+run `pip install -r requirements.txt`
+[...]
