@@ -1,6 +1,8 @@
 import urllib
 from urllib.parse import urlencode
 import subprocess
+import collections
+from src.utils import url_to_json
 
 def read_token():
     try:
@@ -12,7 +14,7 @@ def read_token():
     return ACCESS_TOKEN
 
 
-def pull_contact_list(inbox, loop_limit=2):
+def pull_contact_list(inbox, USER_ID, loop_limit=2):
     n_contact = 0
     contacts = collections.OrderedDict()
     for i in range(loop_limit):

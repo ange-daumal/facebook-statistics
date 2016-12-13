@@ -1,8 +1,7 @@
 import facebook
-from src.api_utils import read_token
+from src.api_utils import read_token, pull_contact_list
 from src.utils import url_to_json
 
-import collections
 
 ACCESS_TOKEN = read_token()
 graph = facebook.GraphAPI(access_token=ACCESS_TOKEN, version='2.3')
@@ -27,6 +26,6 @@ except facebook.GraphAPIError as e:
     print('Something went wrong:', e.type, e.message)
 
 print("Last recent contact:")
-contacts = pull_contact_list(inbox['inbox'], loop_limit=LOOP_LIMIT)
+contacts = pull_contact_list(inbox['inbox'], USER_ID, loop_limit=LOOP_LIMIT)
 for contact in contacts:
     print(contact, contacts[contact]['name'])
