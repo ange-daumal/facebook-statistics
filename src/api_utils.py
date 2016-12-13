@@ -36,14 +36,17 @@ def pull_messages(inbox, USER_ID, contact_id, loop_limit=2, interlocutor_limit=2
             if len(to) <= interlocutor_limit and len(to) > 1:
                 interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
                 if interlocutor['id'] == contact_id:
-                    messages = conversation_list['comments']['data']
-                    for message in messages:
-                        if message['message']:
-                            print(message['message'])
+                    message_page = conversation_list['comments']
+                    for i in range(inbox_limit):
+                        messages = message_page['data']
+                        for message in messages:
+                            try:
+                                print(message['message'])
+                            # TODO: Understand this.
+                            except KeyError:
+                                print("*** no content: may be a sticker ?")
+                        message_page = url_to_json(message_page['paging']['next'])
         inbox = url_to_json(inbox['paging']['next'])
-
-
-
 
 
 # This is not used, but should be, actually.
