@@ -1,5 +1,9 @@
+# Program-related
+*.settings
+
 # Editor-related
 .idea
+*.swp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
