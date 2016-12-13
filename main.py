@@ -1,11 +1,13 @@
 import facebook
-from src.api_utils import read_token, pull_contact_list
-from src.utils import url_to_json
+from src.api_utils import read_token, pull_contact_list, pull_messages
 
 
-ACCESS_TOKEN = read_token()
-graph = facebook.GraphAPI(access_token=ACCESS_TOKEN, version='2.3')
+# PARAMETERS
+LOOP_LIMIT = 1
+INBOX_LIMIT = 2
 
+
+graph = facebook.GraphAPI(access_token=read_token(), version='2.3')
 try:
     identity = graph.get_object(id="me")
 except facebook.GraphAPIError as e:
@@ -17,9 +19,6 @@ LAST_NAME = identity['first_name']
 USER_NAME = identity['name']
 USER_GENDER = identity['gender']
 
-INBOX_LIMIT = 0
-LOOP_LIMIT = 3
-
 try:
     inbox = graph.get_object(id=USER_ID, fields="inbox{to, comments}")
 except facebook.GraphAPIError as e:
@@ -29,3 +28,8 @@ print("Last recent contact:")
 contacts = pull_contact_list(inbox['inbox'], USER_ID, loop_limit=LOOP_LIMIT)
 for contact in contacts:
     print(contact, contacts[contact]['name'])
+
+print("Enter the contact number you want to stalk your conversation with:")
+target = int(input())
+
+pull_messages(inbox['inbox'], USER_ID, contacts[target]['id'])

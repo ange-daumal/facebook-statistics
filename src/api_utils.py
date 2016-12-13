@@ -1,3 +1,4 @@
+import facebook
 import urllib
 from urllib.parse import urlencode
 import subprocess
@@ -14,19 +15,33 @@ def read_token():
     return ACCESS_TOKEN
 
 
-def pull_contact_list(inbox, USER_ID, loop_limit=2):
+def pull_contact_list(inbox, USER_ID, loop_limit=2, interlocutor_limit=2):
     n_contact = 0
     contacts = collections.OrderedDict()
     for i in range(loop_limit):
         for conversation_list in inbox['data']:
             to = conversation_list['to']['data']
-            # Only handle 1 to 1 conversation
-            if len(to) == 2:
+            if len(to) <= interlocutor_limit and len(to) > 1:
                 interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
                 contacts.update({n_contact : interlocutor})
                 n_contact = len(contacts)
         inbox = url_to_json(inbox['paging']['next'])
     return contacts
+
+
+def pull_messages(inbox, USER_ID, contact_id, loop_limit=2, interlocutor_limit=2, inbox_limit=2):
+    for i in range(loop_limit):
+        for conversation_list in inbox['data']:
+            to = conversation_list['to']['data']
+            if len(to) <= interlocutor_limit and len(to) > 1:
+                interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
+                if interlocutor['id'] == contact_id:
+                    messages = conversation_list['comments']['data']
+                    for message in messages:
+                        if message['message']:
+                            print(message['message'])
+        inbox = url_to_json(inbox['paging']['next'])
+
 
 
 
