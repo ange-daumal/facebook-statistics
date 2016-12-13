@@ -11,13 +11,30 @@ def read_token():
         exit(1)
     return ACCESS_TOKEN
 
+
+def pull_contact_list(inbox, loop_limit=2):
+    n_contact = 0
+    contacts = collections.OrderedDict()
+    for i in range(loop_limit):
+        for conversation_list in inbox['data']:
+            to = conversation_list['to']['data']
+            # Only handle 1 to 1 conversation
+            if len(to) == 2:
+                interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
+                contacts.update({n_contact : interlocutor})
+                n_contact = len(contacts)
+        inbox = url_to_json(inbox['paging']['next'])
+    return contacts
+
+
+
+
+# This is not used, but should be, actually.
 def normal_way_to_get_token():
     FACEBOOK_APP_ID     = 'XXXXXXXXXXXXXXX'
     FACEBOOK_APP_SECRET = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     FACEBOOK_PROFILE_ID = 'XXXXXX'
 
-
-    # Trying to get an access token. Very awkward.
     oauth_args = dict(client_id     = FACEBOOK_APP_ID,
             client_secret = FACEBOOK_APP_SECRET,
             grant_type    = 'client_credentials')
