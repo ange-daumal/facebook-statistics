@@ -5,7 +5,7 @@ import subprocess
 def read_token():
     try:
         with open("user.settings", "r") as access_token:
-            ACCESS_TOKEN = access_token.read()
+            ACCESS_TOKEN = access_token.read().split()[0]
     except:
         print("Please put your access token in user.settings file (see README.md)")
         exit(1)

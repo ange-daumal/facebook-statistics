@@ -25,3 +25,7 @@ change the latest version to 2.3
 Warning : this access token will only last few hours, so do not forget to
 update it before every use of the program.
 
+# Warnings
+
+If you deleted messages that you have sent or received, we won't be
+able to retrieve them.
