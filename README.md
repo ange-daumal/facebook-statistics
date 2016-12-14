@@ -11,6 +11,7 @@ our TODO list ;)
 ## Requirements
 
 * Python3.5
+* pip
 * packages listed in requirements.txt : run `pip install -r requirements.txt`
 
 ## Setup
@@ -25,7 +26,26 @@ change the latest version to 2.3
 Warning : this access token will only last few hours, so do not forget to
 update it before every use of the program.
 
-# Warnings
+# Troubleshoot
 
 If you deleted messages that you have sent or received, we won't be
 able to retrieve them.
+
+## New to Python
+
+### On Linux
+
+Follow these commands:
+```
+sudo apt-get install python3 python3-pip
+pip install -m --upgrade pip
+```
+Commands `python` and `pip` should work directly from your terminal.
+If not, you can add their path to your environment variables or use an alias.
+
+### On Windows
+
+* Install the last release of python *3* from www.python.org
+
+Then I'll recommand download a Python IDE, like PyCharm. It will automatically
+download all the needed packages when you open the project.
