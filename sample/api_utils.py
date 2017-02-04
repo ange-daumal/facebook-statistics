@@ -3,7 +3,7 @@ import urllib
 from urllib.parse import urlencode
 import subprocess
 import collections
-from src.utils import url_to_json
+from utils import url_to_json
 
 def read_token():
     try:
@@ -14,6 +14,15 @@ def read_token():
         exit(1)
     return ACCESS_TOKEN
 
+
+def find_contact(inbox, USER_ID, name, interlocutor_limit=2):
+    for conversation_list in inbox['data']:
+        to = conversation_list['to']['data']
+        if len(to) <= interlocutor_limit and len(to) > 1:
+            interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
+            if interlocutor['name'] == name:
+                return interlocutor
+    inbox = url_to_json(inbox['paging']['next'])
 
 def pull_contact_list(inbox, USER_ID, loop_limit=2, interlocutor_limit=2):
     n_contact = 0
