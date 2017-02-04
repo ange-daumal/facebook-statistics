@@ -53,7 +53,7 @@ def pull_messages(inbox, USER_ID, contact_id, loop_limit=2, interlocutor_limit=2
                                 print(message['message'])
                             # TODO: Understand this.
                             except KeyError:
-                                print("*** no content: may be a sticker ?")
+                                print("***") # may be sticker or images sent
                         message_page = url_to_json(message_page['paging']['next'])
         inbox = url_to_json(inbox['paging']['next'])
 

@@ -19,7 +19,7 @@ class Person:
             print("I am a " + self.gender + " and my real name is " + \
                     self.first_name + " " + self.last_name)
         else:
-            print()
+            print("I am your interlocutor.")
 
 
 def select_contact(options, inbox, user):
@@ -28,7 +28,7 @@ def select_contact(options, inbox, user):
         partner = Person(interlocutor['id'], interlocutor['name'])
     else:
         print("Retrieving last recent contacts...")
-        contacts = pull_contact_list(inbox['inbox'], user.id, loop_limit=options.n)
+        contacts = pull_contact_list(inbox['inbox'], user.id, loop_limit=options.l)
         for contact in contacts:
             print(contact, contacts[contact]['name'])
         print("Enter the contact number you want to stalk your conversation with:")
@@ -41,7 +41,7 @@ def select_contact(options, inbox, user):
     return partner
 
 
-def init_user(options):
+def select_interlocutors(options):
     graph = facebook.GraphAPI(access_token=read_token(), version='2.3')
     try:
         identity = graph.get_object(id="me")
@@ -51,7 +51,7 @@ def init_user(options):
             firstname=identity['first_name'], lastname=identity['last_name'],
             gender=identity['gender'])
     if options.debug:
-        print(user.details())
+        user.details()
     try:
         inbox = graph.get_object(id=user.id, fields="inbox{to, comments}")
     except facebook.GraphAPIError as e:
@@ -61,8 +61,4 @@ def init_user(options):
     if options.debug:
         partner.details()
 
-
-'''
-pull_messages(inbox['inbox'], USER_ID, contacts[target]['id'],
-        loop_limit=LOOP_LIMIT, inbox_limit=INBOX_LIMIT)
-'''
+    return user, partner, inbox['inbox']
