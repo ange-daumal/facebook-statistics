@@ -38,14 +38,6 @@ def reset_tables(cursor):
         print("Error: %s" % e.args[0])
 
 
-def retrieve_logs():
-    logs = []
-    with open("mysql.settings", "r") as file:
-        for value in file.read().split('\n'):
-            if value:
-                logs.append(value.partition('=')[2])
-    return logs
-
 def add_interlocutors(cursor, user, partner):
     try:
         cursor.execute("INSERT INTO Interlocutors VALUES (?, ?, ?)",

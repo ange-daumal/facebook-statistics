@@ -26,22 +26,6 @@ change the latest version to 2.3
 Warning : this access token will only last few hours, so do not forget to
 update it before every use of the program.
 
-## Setup for MySQL Database
-
-* Install mysql https://dev.mysql.com/doc/refman/5.5/en/installing.html
-* Choose a username, a password and a database name. For example, we choose
-username="scott", password="pwd" and database's name is "messages". Don't
-forget to replace these examples by yours in the following steps.
-* Launch my sql `su; mysql`
-* Create your user `CREATE USER "scott"@"localhost" IDENTIFIED BY "pwd";`
-* And create the database `CREATE DATABASE messages;`
-* Now enter your datas in a file named "mysql.settings" like this :
-```
-username=scott
-password=pwd
-database=messages
-```
-
 You're all set!
 
 # Troubleshoot
