@@ -1,5 +1,7 @@
 # Program-related
 *.settings
+config.py
+*.db
 
 # Editor-related
 .idea

@@ -37,8 +37,8 @@ def pull_contact_list(inbox, USER_ID, loop_limit=2, interlocutor_limit=2):
         inbox = url_to_json(inbox['paging']['next'])
     return contacts
 
-
-def pull_messages(inbox, USER_ID, contact_id, loop_limit=2, interlocutor_limit=2, inbox_limit=2):
+def pull_messages(inbox, USER_ID, contact_id, loop_limit=2, interlocutor_limit=2,
+        inbox_limit=2):
     for i in range(loop_limit):
         for conversation_list in inbox['data']:
             to = conversation_list['to']['data']

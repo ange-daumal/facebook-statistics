@@ -1,4 +1,5 @@
 import facebook
+import sys
 from api_utils import read_token, pull_contact_list, pull_messages, find_contact
 
 
@@ -42,20 +43,26 @@ def select_contact(options, inbox, user):
 
 
 def select_interlocutors(options):
-    graph = facebook.GraphAPI(access_token=read_token(), version='2.3')
+    graph = None
     try:
+        graph = facebook.GraphAPI(access_token=read_token(), version='2.3')
         identity = graph.get_object(id="me")
     except facebook.GraphAPIError as e:
         print('Something went wrong:', e.type, e.message)
+        sys.exit(1)
+
     user = Person(identity['id'], identity['name'],
             firstname=identity['first_name'], lastname=identity['last_name'],
             gender=identity['gender'])
     if options.debug:
         user.details()
+
+    inbox = None
     try:
         inbox = graph.get_object(id=user.id, fields="inbox{to, comments}")
     except facebook.GraphAPIError as e:
         print('Something went wrong:', e.type, e.message)
+        sys.exit(1)
 
     partner = select_contact(options, inbox, user)
     if options.debug:
