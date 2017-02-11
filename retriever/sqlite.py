@@ -97,7 +97,11 @@ def add_message(options, cursor, user, partner, message):
                 date_conversion(message['created_time']),
                 message['message'] if message['message'] is not None else "")
     except KeyError:
-        print("***") # may be sticker or images sent
+        if options.debug:
+            print("***") # may be sticker or images sent
+        insert_message(cursor, message['id'], message['from']['id'],
+                partner.id if message['from']['id'] == user.id else user.id,
+                date_conversion(message['created_time']), "")
 
 
 def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):

@@ -23,6 +23,13 @@ class Person:
             print("I am your interlocutor.")
 
 
+def get_contact_list(options, inbox, user):
+    partners = []
+    contacts = pull_contact_list(inbox['inbox'], user.id, loop_limit=options.l)
+    for contact in contacts:
+        partners.append(Person(contacts[contact]['id'], contacts[contact]['name']))
+    return partners
+
 def select_contact(options, inbox, user):
     if options.contact:
         interlocutor = find_contact(inbox['inbox'], user.id, options.contact)
@@ -64,8 +71,14 @@ def select_interlocutors(options):
         print('Something went wrong:', e.type, e.message)
         sys.exit(1)
 
-    partner = select_contact(options, inbox, user)
-    if options.debug:
-        partner.details()
+    if options.all:
+        partners = get_contact_list(options, inbox, user)
+    else:
+        partner = select_contact(options, inbox, user)
+        partners = [partner]
 
-    return user, partner, inbox['inbox']
+    if options.debug:
+        for dude in partners:
+            dude.details()
+
+    return user, partners, inbox['inbox']
