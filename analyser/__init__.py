@@ -16,11 +16,11 @@ parser.add_option("-c", "--contact", type="string", dest="contact",
         help="specify a contact to stalk the conversation with",
         metavar="STRING")
 
-'''
-parser.add_option("-a", "--all", dest="all", action="store_true",
-        help="do not specify a contact, fill database with all of them",
+parser.add_option("-u", "--update", dest="update", action="store_true",
+        help="force updating values.",
         metavar="BOOLEAN")
 
+'''
 parser.add_option("-s", "--see", dest="see", action="store_true",
         help="see database", metavar="BOOLEAN")
 

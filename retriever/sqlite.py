@@ -15,6 +15,7 @@ def create_tables(cursor):
                 );")
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        sys.exit(1)
     try:
         cursor.execute("CREATE TABLE IF NOT EXISTS Messages( \
                 id VARCHAR(64) UNIQUE NOT NULL, \
@@ -28,6 +29,16 @@ def create_tables(cursor):
                 );")
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        sys.exit(1)
+    try:
+        cursor.execute("CREATE TABLE IF NOT EXISTS Retrieving_stats( \
+                contact_id VARCHAR(64) UNIQUE NOT NULL, \
+                updated_time DATETIME NOT NULL, \
+                reached_end BIT NOT NULL, \
+                FOREIGN KEY (contact_id) REFERENCES Interlocutors(id));")
+    except lite.Error as e:
+        print("Error: %s" % e.args[0])
+        sys.exit(1)
     return
 
 def reset_tables(cursor):
@@ -46,6 +57,7 @@ def add_interlocutors(cursor, user, partner):
         pass
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        sys.exit(1)
     try:
         cursor.execute("INSERT INTO Interlocutors VALUES (?, ?, ?)",
                 [partner.id, partner.username, "NULL"])
@@ -53,6 +65,13 @@ def add_interlocutors(cursor, user, partner):
         pass
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        sys.exit(1)
+    try:
+        cursor.execute("INSERT INTO Retrieving_stats VALUES (?, ?, ?)",
+                [partner.id, datetime.now(), 0])
+    except lite.Error as e:
+        print("Error: %s" % e.args[0])
+        sys.exit(1)
     return
 
 
@@ -88,6 +107,18 @@ def add_message(options, cursor, user, partner, message):
                 date_conversion(message['created_time']), "")
     return
 
+def reached_end(options, cursor, partner):
+    if options.debug:
+        print("REACHED END!!")
+    try:
+        cursor.execute("UPDATE Retrieving_stats SET reached_end=1, \
+                updated_time=? WHERE contact_id=?;",
+                [datetime.now(), partner.id])
+    except lite.Error as e:
+        print("Error: %s" % e.args[0])
+        sys.exit(1)
+    return
+
 
 def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
     cur = con.cursor()
@@ -105,10 +136,10 @@ def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
                         for message in messages:
                             add_message(options, cur, user, partner, message)
                         con.commit()
-                        if message_page['paging']:
+                        if 'paging' in message_page.keys():
                             message_page = url_to_json(message_page['paging']['next'])
                         else:
-                            return
+                            return reached_end(options, cur, partner)
         inbox = url_to_json(inbox['paging']['next'])
 
 
