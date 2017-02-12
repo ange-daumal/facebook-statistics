@@ -20,7 +20,10 @@ def read_database(options):
             print(contact_id)
 
         else:
-            for row in cursor.execute("SELECT name, count(sender_id) FROM Messages JOIN Interlocutors ON Interlocutors.id=sender_id GROUP BY sender_id"):
+            for row in cursor.execute("SELECT name, count(sender_id) \
+                    FROM Messages \
+                    JOIN Interlocutors ON Interlocutors.id=sender_id \
+                    GROUP BY sender_id ORDER BY count(sender_id) DESC"):
                 print(row)
 
     except lite.Error as e:

@@ -7,7 +7,7 @@ from utils import url_to_json
 
 def create_tables(cursor):
     try:
-        cursor.execute("CREATE TABLE Interlocutors( \
+        cursor.execute("CREATE TABLE IF NOT EXISTS Interlocutors( \
                 id VARCHAR(64) UNIQUE NOT NULL, \
                 name VARCHAR(64) NOT NULL, \
                 sex CHAR(1), \
@@ -16,7 +16,7 @@ def create_tables(cursor):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
     try:
-        cursor.execute("CREATE TABLE Messages( \
+        cursor.execute("CREATE TABLE IF NOT EXISTS Messages( \
                 id VARCHAR(64) UNIQUE NOT NULL, \
                 sender_id VARCHAR(64) NOT NULL, \
                 recipient_id VARCHAR(64) NOT NULL, \
@@ -56,26 +56,9 @@ def add_interlocutors(cursor, user, partner):
     return
 
 
-def see_database(options):
-    con = None
-    try:
-        con = lite.connect("user.db")
-        cursor = con.cursor()
-        for row in cursor.execute("SELECT sender_id, count(id) FROM Messages GROUP BY sender_id"):
-            print(row)
-        for row in cursor.execute("SELECT * FROM Interlocutors"):
-            print(row)
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        sys.exit(1)
-
-    finally:
-        if con:
-            con.close()
-
-
 def date_conversion(s):
     return s.replace("T", " ").split("+")[0]
+
 
 def insert_message(cursor, msg_id, sender, receiver, datetime, msg):
     try:
@@ -86,6 +69,7 @@ def insert_message(cursor, msg_id, sender, receiver, datetime, msg):
     except lite.Error as e:
         print(e)
         print("Error: %s" % e.args[0])
+
 
 def add_message(options, cursor, user, partner, message):
     try:
@@ -102,6 +86,7 @@ def add_message(options, cursor, user, partner, message):
         insert_message(cursor, message['id'], message['from']['id'],
                 partner.id if message['from']['id'] == user.id else user.id,
                 date_conversion(message['created_time']), "")
+    return
 
 
 def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
@@ -123,7 +108,7 @@ def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
                         if message_page['paging']:
                             message_page = url_to_json(message_page['paging']['next'])
                         else:
-                            return;
+                            return
         inbox = url_to_json(inbox['paging']['next'])
 
 
@@ -142,7 +127,6 @@ def fill_database(options, user, partner, inbox):
 
         create_tables(cursor)
         add_interlocutors(cursor, user, partner)
-
         save_messages(options, con, inbox, user, partner)
 
     except lite.Error as e:

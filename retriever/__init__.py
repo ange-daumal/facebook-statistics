@@ -1,5 +1,5 @@
 from select_interlocutors import select_interlocutors, get_contact_list
-from sqlite import fill_database, see_database
+from sqlite import fill_database
 from optparse import OptionParser
 
 
@@ -20,9 +20,6 @@ parser.add_option("-a", "--all", dest="all", action="store_true",
         help="do not specify a contact, fill database with all of them",
         metavar="BOOLEAN")
 
-parser.add_option("-s", "--see", dest="see", action="store_true",
-        help="see database", metavar="BOOLEAN")
-
 parser.add_option("-r", "--reset", dest="reset", action="store_true",
         help="reset database", metavar="BOOLEAN")
 
@@ -31,9 +28,6 @@ parser.add_option("-d", "--debug", dest="debug", action="store_true",
 
 (options, args) = parser.parse_args()
 if __name__ == "__main__":
-    if options.see:
-        see_database(options)
-    else:
-        user, partners, inbox = select_interlocutors(options)
-        for partner in partners:
-            fill_database(options, user, partner, inbox)
+    user, partners, inbox = select_interlocutors(options)
+    for partner in partners:
+        fill_database(options, user, partner, inbox)
