@@ -4,13 +4,11 @@ from analyse import read_database
 
 parser = OptionParser()
 parser.add_option("-l", "--limit", type="int", dest="limit", default=5,
-        help="display only [limit] results for each analysis.", metavar="NUMBER")
+        help="display only [l] results for each analysis.", metavar="NUMBER")
 
-'''
-parser.add_option("-n", "--messages-number", type="int", dest="n", default=1,
-        help="list n * 23 messages", metavar="NUMBER")
+parser.add_option("-n", "--messages-number", type="int", dest="n", default=20,
+        help="handle [n] bunch of messages", metavar="NUMBER")
 
-'''
 parser.add_option("-c", "--contact", type="string", dest="contact",
         action="store",
         help="specify a contact to stalk the conversation with",

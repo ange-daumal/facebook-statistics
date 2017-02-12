@@ -12,6 +12,7 @@ def get_interlocutors_id(options, cursor):
     for contact in tuples:
         contacts.append(contact)
     # This is weird but I don't know why my "tuples" object just do not last.
+    print(contacts)
     return contacts
 
 def update_ratios(options, cursor):
@@ -36,7 +37,12 @@ def analyse(options, cursor):
         if options.what in ['all', 'ratios']:
             analyse_ratios(options, cursor)
         if options.what in ['all', 'subjects']:
-            analyse_words(options, cursor)
+            if not options.contact:
+                print("Please specify a contact [-c option]")
+                sys.exit(1)
+            contacts = get_interlocutors_id(options, cursor)
+            for contact in contacts:
+                analyse_words(options, cursor, contact[0])
 
     except lite.Error as e:
         print("Error: %s" % e.args[0])
@@ -53,7 +59,8 @@ def read_database(options):
         if options.debug:
             print_result(cursor, "SELECT name, updated_time, reached_end \
                 FROM Retrieving_stats \
-                JOIN Interlocutors ON Interlocutors.id=contact_id")
+                JOIN Interlocutors ON Interlocutors.id=contact_id\
+                ORDER BY updated_time DESC")
 
 
         if options.update:

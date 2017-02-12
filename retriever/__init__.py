@@ -1,3 +1,4 @@
+import time
 from select_interlocutors import select_interlocutors, get_contact_list
 from sqlite import fill_database
 from optparse import OptionParser
@@ -27,7 +28,11 @@ parser.add_option("-d", "--debug", dest="debug", action="store_true",
         help="print debug messages", metavar="BOOLEAN")
 
 (options, args) = parser.parse_args()
+
 if __name__ == "__main__":
     user, partners, inbox = select_interlocutors(options)
     for partner in partners:
+        if options.debug:
+            print("*** Handling %s" % partner.username)
         fill_database(options, user, partner, inbox)
+        time.sleep(60)

@@ -72,9 +72,11 @@ def print_top(options, string, cursor, cmd):
 
 def analyse_ratios(options, cursor):
     try:
-        #ratios = cursor.execute("SELECT * FROM ratios;")
+        if options.debug:
+            print_top(options, "Ratios", cursor, "SELECT * FROM ratios")
+
         print_top(options, "You message them the most", cursor,
-                "SELECT * FROM ratios ORDER BY words_sent DESC")
+                "SELECT name, words_sent FROM ratios ORDER BY words_sent DESC")
 
         # More content = you like them. That's obvious.
         print_top(options, "You send them more content than they do", cursor,

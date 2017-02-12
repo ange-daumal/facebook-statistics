@@ -1,5 +1,6 @@
 import sqlite3 as lite
 import sys
+import time
 from datetime import date, datetime, timedelta
 from utils import url_to_json
 
@@ -14,7 +15,6 @@ def create_tables(cursor):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
-        sys.exit(1)
     try:
         cursor.execute("CREATE TABLE IF NOT EXISTS Messages( \
                 id VARCHAR(64) UNIQUE NOT NULL, \
@@ -29,7 +29,6 @@ def create_tables(cursor):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
-        sys.exit(1)
     try:
         cursor.execute("CREATE TABLE IF NOT EXISTS Retrieving_stats( \
                 contact_id VARCHAR(64) UNIQUE NOT NULL, \
@@ -39,7 +38,6 @@ def create_tables(cursor):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
-        sys.exit(1)
     return
 
 def reset_tables(cursor):
@@ -57,16 +55,18 @@ def try_command(cursor, command):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
-        sys.exit(1)
 
 def add_interlocutors(cursor, user, partner):
-    try_command(cursor, "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
+    try_command(cursor,
+            "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
                 user.id, user.username, 1 if user.gender=="female" else 0))
 
-    try_command(cursor, "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
+    try_command(cursor,
+            "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
                 partner.id, partner.username, "NULL"))
 
-    try_command(cursor, "INSERT INTO Retrieving_stats VALUES ('{}', '{}', {});".format(
+    try_command(cursor,
+            "INSERT INTO Retrieving_stats VALUES ('{}', '{}', {});".format(
         partner.id, datetime.now(), 0))
 
 def date_conversion(s):
@@ -87,8 +87,7 @@ def insert_message(cursor, msg_id, sender, receiver, datetime, msg):
 def add_message(options, cursor, user, partner, message):
     try:
         if options.debug:
-            print("From: %s Content: %s" %
-                    (message['from']['name'], message['message']))
+            print("%s| %s" % (message['from']['name'], message['message']))
         insert_message(cursor, message['id'], message['from']['id'],
                 partner.id if message['from']['id'] == user.id else user.id,
                 date_conversion(message['created_time']),
@@ -99,11 +98,9 @@ def add_message(options, cursor, user, partner, message):
         insert_message(cursor, message['id'], message['from']['id'],
                 partner.id if message['from']['id'] == user.id else user.id,
                 date_conversion(message['created_time']), "")
-    return
+
 
 def reached_end(options, cursor, partner):
-    if options.debug:
-        print("REACHED END!!")
     try:
         cursor.execute("UPDATE Retrieving_stats SET reached_end=1, \
                 updated_time=? WHERE contact_id=?;",
@@ -111,10 +108,11 @@ def reached_end(options, cursor, partner):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
-    return
+
 
 def loop_messages(options, con, message_page, user, partner):
     cur = con.cursor()
+    # Get messages-retrieving tracking stats
     stats = cur.execute("SELECT updated_time, reached_end \
             FROM Retrieving_stats \
             JOIN Interlocutors ON Interlocutors.id=contact_id\
@@ -126,15 +124,14 @@ def loop_messages(options, con, message_page, user, partner):
             add_message(options, cur, user, partner, message)
         con.commit()
 
-        if stats[1] == 1 and message['created_time'] > stats[0]:
+        if (not 'paging' in message_page.keys() or
+        stats[1] == 1 and message['created_time'] > stats[0]):
             if options.debug:
                 print("Synch finished! Last updated: %s " % (stats[0]))
-            return
-
-        if 'paging' in message_page.keys():
-            message_page = url_to_json(message_page['paging']['next'])
-        else:
             return reached_end(options, cur, partner)
+        else:
+            time.sleep(10)
+            message_page = url_to_json(message_page['paging']['next'])
 
 
 def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
@@ -144,6 +141,7 @@ def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
             to = conversation_list['to']['data']
             if len(to) <= interlocutor_limit and len(to) > 1:
                 interlocutor = to[0] if to[1]['id'] == user.id else to[1]
+                # Found
                 if interlocutor['id'] == partner.id:
                     return loop_messages(options, con,
                             conversation_list['comments'], user, partner)
@@ -155,11 +153,7 @@ def fill_database(options, user, partner, inbox):
     try:
         con = lite.connect("user.db")
         cursor = con.cursor()
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        raise
 
-    try:
         if options.reset:
             reset_tables(cursor)
 
