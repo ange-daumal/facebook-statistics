@@ -26,12 +26,13 @@ def print_result(cursor, cmd, string=None):
 
 def analyse(options, cursor):
     try:
-        print_result(cursor, "SELECT name, count(sender_id) \
+        if options.debug:
+            print_result(cursor, "SELECT name, count(sender_id) \
                 FROM Messages \
                 JOIN Interlocutors ON Interlocutors.id=sender_id \
                 GROUP BY sender_id ORDER BY count(sender_id) DESC")
 
-        #analyse_ratios(options, cursor)
+        analyse_ratios(options, cursor)
 
     except lite.Error as e:
         print("Error: %s" % e.args[0])
@@ -45,7 +46,8 @@ def read_database(options):
         cursor = con.cursor()
 
         #TODO: Use result below to check update
-        print_result(cursor, "SELECT name, updated_time, reached_end \
+        if options.debug:
+            print_result(cursor, "SELECT name, updated_time, reached_end \
                 FROM Retrieving_stats \
                 JOIN Interlocutors ON Interlocutors.id=contact_id")
 

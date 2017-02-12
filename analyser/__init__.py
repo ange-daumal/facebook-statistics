@@ -3,10 +3,10 @@ from analyse import read_database
 
 
 parser = OptionParser()
-'''
-parser.add_option("-l", "--list-contact", type="int", dest="l", default=1,
-        help="list l * 18 contacts", metavar="NUMBER")
+parser.add_option("-l", "--limit", type="int", dest="limit", default=5,
+        help="display only [limit] results for each analysis.", metavar="NUMBER")
 
+'''
 parser.add_option("-n", "--messages-number", type="int", dest="n", default=1,
         help="list n * 23 messages", metavar="NUMBER")
 

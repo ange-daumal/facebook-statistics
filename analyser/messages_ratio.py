@@ -64,39 +64,39 @@ def compare_words(options, cursor, contacts):
     create_view(cursor)
     return
 
-def print_top(string, cursor, cmd, limit=3):
+def print_top(options, string, cursor, cmd):
     print(string)
-    for result in cursor.execute(cmd + " LIMIT %d;" % limit):
+    for result in cursor.execute(cmd + " LIMIT %d;" % options.limit):
         print(result)
     print()
 
 def analyse_ratios(options, cursor):
     try:
         #ratios = cursor.execute("SELECT * FROM ratios;")
-        print_top("You message them the most", cursor,
+        print_top(options, "You message them the most", cursor,
                 "SELECT * FROM ratios ORDER BY words_sent DESC")
 
         # More content = you like them. That's obvious.
-        print_top("You send them more content than they do", cursor,
+        print_top(options, "You send them more content than they do", cursor,
                 "SELECT name, quantity FROM ratios ORDER BY quantity DESC")
 
         # You like them too but not as much as they like you.
-        print_top("They send you more content than you do", cursor,
+        print_top(options, "They send you more content than you do", cursor,
                 "SELECT name, quantity FROM ratios ORDER BY quantity")
 
         # Longer messages => ?? Half is "i don't really know you" and the other
         # half is "I know you too much so I'm okay spamming you"
-        print_top("Your message are longer with them", cursor,
+        print_top(options, "Your message are longer with them", cursor,
                 "SELECT name, u_quality FROM ratios ORDER BY u_quality DESC")
 
-        print_top("They message you the longer", cursor,
+        print_top(options, "They message you the longer", cursor,
                 "SELECT name, p_quality FROM ratios ORDER BY p_quality DESC")
 
         # Shorter messages ==> feeling okay/friendly?
-        print_top("Your messages are shorter with them", cursor,
+        print_top(options, "Your messages are shorter with them", cursor,
                 "SELECT name, u_quality FROM ratios ORDER BY u_quality")
 
-        print_top("They message you the shorter", cursor,
+        print_top(options, "They message you the shorter", cursor,
                 "SELECT name, p_quality FROM ratios ORDER BY p_quality")
 
         # Guys in the intersection (both shorter messages) <=> your preferred
