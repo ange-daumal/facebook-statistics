@@ -15,6 +15,7 @@ def create_tables(cursor):
                 );")
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        raise
         sys.exit(1)
     try:
         cursor.execute("CREATE TABLE IF NOT EXISTS Messages( \
@@ -29,6 +30,7 @@ def create_tables(cursor):
                 );")
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        raise
         sys.exit(1)
     try:
         cursor.execute("CREATE TABLE IF NOT EXISTS Retrieving_stats( \
@@ -38,6 +40,7 @@ def create_tables(cursor):
                 FOREIGN KEY (contact_id) REFERENCES Interlocutors(id));")
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        raise
         sys.exit(1)
     return
 
@@ -48,32 +51,25 @@ def reset_tables(cursor):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
 
+def try_command(cursor, command):
+    try:
+        cursor.execute(command)
+    except lite.IntegrityError:
+        pass
+    except lite.Error as e:
+        print("Error: %s" % e.args[0])
+        raise
+        sys.exit(1)
 
 def add_interlocutors(cursor, user, partner):
-    try:
-        cursor.execute("INSERT INTO Interlocutors VALUES (?, ?, ?)",
-                [user.id, user.username, user.gender])
-    except lite.IntegrityError:
-        pass
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        sys.exit(1)
-    try:
-        cursor.execute("INSERT INTO Interlocutors VALUES (?, ?, ?)",
-                [partner.id, partner.username, "NULL"])
-    except lite.IntegrityError:
-        pass
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        sys.exit(1)
-    try:
-        cursor.execute("INSERT INTO Retrieving_stats VALUES (?, ?, ?)",
-                [partner.id, datetime.now(), 0])
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        sys.exit(1)
-    return
+    try_command(cursor, "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
+                user.id, user.username, 1 if user.gender=="female" else 0))
 
+    try_command(cursor, "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
+                partner.id, partner.username, "NULL"))
+
+    try_command(cursor, "INSERT INTO Retrieving_stats VALUES ('{}', '{}', {});".format(
+        partner.id, datetime.now(), 0))
 
 def date_conversion(s):
     return s.replace("T", " ").split("+")[0]
@@ -116,12 +112,25 @@ def reached_end(options, cursor, partner):
                 [datetime.now(), partner.id])
     except lite.Error as e:
         print("Error: %s" % e.args[0])
-        sys.exit(1)
+        raise
     return
+
+def loop_messages(options, con, message_page, user, partner):
+    cur = con.cursor()
+    for i in range(options.n):
+        messages = message_page['data']
+        for message in messages:
+            add_message(options, cur, user, partner, message)
+        con.commit()
+        #TODO: Add optimization if table Retrieving_stats.reached_end=1
+        # And the message['created_time'] is older than last updated time
+        if 'paging' in message_page.keys():
+            message_page = url_to_json(message_page['paging']['next'])
+        else:
+            return reached_end(options, cur, partner)
 
 
 def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
-    cur = con.cursor()
     # Looking for interlocutor
     for i in range(options.l):
         for conversation_list in inbox['data']:
@@ -129,17 +138,8 @@ def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
             if len(to) <= interlocutor_limit and len(to) > 1:
                 interlocutor = to[0] if to[1]['id'] == user.id else to[1]
                 if interlocutor['id'] == partner.id:
-                    # Found, loop on messages
-                    message_page = conversation_list['comments']
-                    for i in range(options.n):
-                        messages = message_page['data']
-                        for message in messages:
-                            add_message(options, cur, user, partner, message)
-                        con.commit()
-                        if 'paging' in message_page.keys():
-                            message_page = url_to_json(message_page['paging']['next'])
-                        else:
-                            return reached_end(options, cur, partner)
+                    return loop_messages(options, con,
+                            conversation_list['comments'], user, partner)
         inbox = url_to_json(inbox['paging']['next'])
 
 
@@ -150,7 +150,7 @@ def fill_database(options, user, partner, inbox):
         cursor = con.cursor()
     except lite.Error as e:
         print("Error: %s" % e.args[0])
-        sys.exit(1)
+        raise
 
     try:
         if options.reset:
@@ -162,6 +162,7 @@ def fill_database(options, user, partner, inbox):
 
     except lite.Error as e:
         print("Error: %s" % e.args[0])
+        raise
     finally:
         con.commit()
         con.close()
