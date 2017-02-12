@@ -119,8 +119,11 @@ def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
                         messages = message_page['data']
                         for message in messages:
                             add_message(options, cur, user, partner, message)
-                        message_page = url_to_json(message_page['paging']['next'])
                         con.commit()
+                        if message_page['paging']:
+                            message_page = url_to_json(message_page['paging']['next'])
+                        else:
+                            return;
         inbox = url_to_json(inbox['paging']['next'])
 
 
