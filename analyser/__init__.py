@@ -28,6 +28,11 @@ parser.add_option("-r", "--reset", dest="reset", action="store_true",
         help="reset database", metavar="BOOLEAN")
 
 '''
+
+parser.add_option("-w", "--what", type="choice", dest="what", action="store",
+        default="all", choices=["ratios", "subjects", "all"],
+        help="choose how to analysis your conversation(s)", metavar="STRING")
+
 parser.add_option("-d", "--debug", dest="debug", action="store_true",
         help="print debug messages", metavar="BOOLEAN")
 

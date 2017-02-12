@@ -11,3 +11,5 @@ init:
 
 reset:
 	rm user.db user.settings
+
+.PHONY: help init reset

@@ -1,6 +1,7 @@
 import sqlite3 as lite
 import sys
 from messages_ratio import compare_words, analyse_ratios
+from words_distribution import analyse_words
 
 def get_interlocutors_id(options, cursor):
     if options.contact:
@@ -32,11 +33,14 @@ def analyse(options, cursor):
                 JOIN Interlocutors ON Interlocutors.id=sender_id \
                 GROUP BY sender_id ORDER BY count(sender_id) DESC")
 
-        analyse_ratios(options, cursor)
+        if options.what in ['all', 'ratios']:
+            analyse_ratios(options, cursor)
+        if options.what in ['all', 'subjects']:
+            analyse_words(options, cursor)
 
     except lite.Error as e:
         print("Error: %s" % e.args[0])
-        sys.exit(1)
+        raise
 
 
 def read_database(options):
@@ -51,6 +55,7 @@ def read_database(options):
                 FROM Retrieving_stats \
                 JOIN Interlocutors ON Interlocutors.id=contact_id")
 
+
         if options.update:
             update_ratios(options, cursor)
 
@@ -58,7 +63,7 @@ def read_database(options):
 
     except lite.Error as e:
         print("Error: %s" % e.args[0])
-        sys.exit(1)
+        raise
 
     finally:
         if con:

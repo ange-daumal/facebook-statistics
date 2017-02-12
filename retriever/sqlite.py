@@ -1,5 +1,3 @@
-import mysql.connector
-import MySQLdb
 import sqlite3 as lite
 import sys
 from datetime import date, datetime, timedelta
@@ -117,13 +115,22 @@ def reached_end(options, cursor, partner):
 
 def loop_messages(options, con, message_page, user, partner):
     cur = con.cursor()
+    stats = cur.execute("SELECT updated_time, reached_end \
+            FROM Retrieving_stats \
+            JOIN Interlocutors ON Interlocutors.id=contact_id\
+            WHERE contact_id='{}'".format(partner.id)).fetchone()
+
     for i in range(options.n):
         messages = message_page['data']
         for message in messages:
             add_message(options, cur, user, partner, message)
         con.commit()
-        #TODO: Add optimization if table Retrieving_stats.reached_end=1
-        # And the message['created_time'] is older than last updated time
+
+        if stats[1] == 1 and message['created_time'] > stats[0]:
+            if options.debug:
+                print("Synch finished! Last updated: %s " % (stats[0]))
+            return
+
         if 'paging' in message_page.keys():
             message_page = url_to_json(message_page['paging']['next'])
         else:
