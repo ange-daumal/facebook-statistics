@@ -1,4 +1,5 @@
 import urllib
+import facebook
 import json
 
 def url_to_json(url):
