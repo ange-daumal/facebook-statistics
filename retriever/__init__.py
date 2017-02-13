@@ -24,6 +24,10 @@ parser.add_option("-a", "--all", dest="all", action="store_true",
 parser.add_option("-r", "--reset", dest="reset", action="store_true",
         help="reset database", metavar="BOOLEAN")
 
+parser.add_option("-s", "--sleep", type="int", dest="s", default=1,
+        help="sleeping time (delay) between queries (FB API calls)",
+        metavar="NUMBER")
+
 parser.add_option("-d", "--debug", dest="debug", action="store_true",
         help="print debug messages", metavar="BOOLEAN")
 
@@ -35,4 +39,4 @@ if __name__ == "__main__":
         if options.debug:
             print("*** Handling %s" % partner.username)
         fill_database(options, user, partner, inbox)
-        time.sleep(20)
+        time.sleep(options.s)

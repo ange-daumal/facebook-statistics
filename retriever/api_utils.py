@@ -17,37 +17,38 @@ def read_token():
     return ACCESS_TOKEN
 
 
-def find_contact(inbox, USER_ID, name, interlocutor_limit=2):
+def find_contact(options, inbox, USER_ID, interlocutor_limit=2):
     while(True):
         for conversation_list in inbox['data']:
             to = conversation_list['to']['data']
             if len(to) <= interlocutor_limit and len(to) > 1:
                 interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
-                if interlocutor['name'] == name:
+                if interlocutor['name'] == options.contact:
                     return interlocutor
         if not 'paging' in inbox.keys() or not 'next' in inbox['paging'].keys():
             print("Contact not found.")
             sys.exit(1)
-        time.sleep(5)
+        time.sleep(options.s)
         inbox = url_to_json(inbox['paging']['next'])
 
-def pull_contact_list(inbox, USER_ID, loop_limit=2, interlocutor_limit=2):
+def pull_contact_list(options, inbox, USER_ID, n_interlocutor=2):
     n_contact = 0
     contacts = collections.OrderedDict()
-    for i in range(loop_limit):
+    for i in range(options.l):
         for conversation_list in inbox['data']:
             to = conversation_list['to']['data']
-            if len(to) <= interlocutor_limit and len(to) > 1:
+            if len(to) <= n_interlocutor and len(to) > 1:
                 interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
                 contacts.update({n_contact : interlocutor})
                 n_contact = len(contacts)
         if not 'paging' in inbox.keys() or not 'next' in inbox['paging'].keys():
             return contacts
-        time.sleep(5)
+        time.sleep(options.s)
         inbox = url_to_json(inbox['paging']['next'])
     return contacts
 
 # This is not used, but should be, actually.
+'''
 def normal_way_to_get_token():
     FACEBOOK_APP_ID     = 'XXXXXXXXXXXXXXX'
     FACEBOOK_APP_SECRET = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -67,3 +68,4 @@ def normal_way_to_get_token():
     except KeyError:
         print('Unable to grab an access token!')
         exit(1)
+'''

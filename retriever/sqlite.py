@@ -99,6 +99,8 @@ def reached_end(options, cursor, partner, now):
         cursor.execute("UPDATE Retrieving_stats SET reached_end=1, \
                 updated_time=? WHERE contact_id=?;",
                 [now, partner.id])
+        if options.debug:
+            print("Synch finished! Last updated: %s " % now)
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
@@ -121,11 +123,9 @@ def loop_messages(options, con, message_page, user, partner):
 
         if (not 'paging' in message_page.keys() or
         stats[1] == 1 and message['created_time'] > stats[0]):
-            if options.debug:
-                print("Synch finished! Last updated: %s " % (stats[0]))
             return reached_end(options, cur, partner, now)
         else:
-            time.sleep(10)
+            time.sleep(options.s)
             message_page = url_to_json(message_page['paging']['next'])
 
 

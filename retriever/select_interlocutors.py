@@ -25,18 +25,18 @@ class Person:
 
 def get_contact_list(options, inbox, user):
     partners = []
-    contacts = pull_contact_list(inbox['inbox'], user.id, loop_limit=options.l)
+    contacts = pull_contact_list(options, inbox['inbox'], user.id)
     for contact in contacts:
         partners.append(Person(contacts[contact]['id'], contacts[contact]['name']))
     return partners
 
 def select_contact(options, inbox, user):
     if options.contact:
-        interlocutor = find_contact(inbox['inbox'], user.id, options.contact)
+        interlocutor = find_contact(options, inbox['inbox'], user.id)
         partner = Person(interlocutor['id'], interlocutor['name'])
     else:
         print("Retrieving last recent contacts...")
-        contacts = pull_contact_list(inbox['inbox'], user.id, loop_limit=options.l)
+        contacts = pull_contact_list(options, inbox['inbox'], user.id)
         for contact in contacts:
             print(contact, contacts[contact]['name'])
         print("Enter the contact number you want to stalk your conversation with:")
