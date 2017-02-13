@@ -1,6 +1,6 @@
 import facebook
 import sys
-from api_utils import read_token, pull_contact_list, pull_messages, find_contact
+from api_utils import read_token, pull_contact_list, find_contact
 
 
 # PARAMETERS

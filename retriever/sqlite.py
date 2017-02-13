@@ -4,68 +4,59 @@ import time
 from datetime import date, datetime, timedelta
 from utils import url_to_json
 
+def try_execute(cursor, str):
+    try:
+        cursor.execute(str)
+    except lite.Error as e:
+        print("Error: %s" % e.args[0])
+        raise
+
 def create_tables(cursor):
-    try:
-        cursor.execute("CREATE TABLE IF NOT EXISTS Interlocutors( \
-                id VARCHAR(64) UNIQUE NOT NULL, \
-                name VARCHAR(64) NOT NULL, \
-                sex CHAR(1), \
-                PRIMARY KEY(id) \
-                );")
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        raise
-    try:
-        cursor.execute("CREATE TABLE IF NOT EXISTS Messages( \
-                id VARCHAR(64) UNIQUE NOT NULL, \
-                sender_id VARCHAR(64) NOT NULL, \
-                recipient_id VARCHAR(64) NOT NULL, \
-                time DATETIME NOT NULL, \
-                content VARCHAR(20000) NOT NULL, \
-                PRIMARY KEY (id), \
-                FOREIGN KEY (sender_id) REFERENCES Interlocutors(id), \
-                FOREIGN KEY (recipient_id) REFERENCES Interlocutors(id) \
-                );")
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        raise
-    try:
-        cursor.execute("CREATE TABLE IF NOT EXISTS Retrieving_stats( \
-                contact_id VARCHAR(64) UNIQUE NOT NULL, \
-                updated_time DATETIME NOT NULL, \
-                reached_end BIT NOT NULL, \
-                FOREIGN KEY (contact_id) REFERENCES Interlocutors(id));")
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        raise
-    return
+    try_execute(cursor, "CREATE TABLE IF NOT EXISTS Interlocutors( \
+            id VARCHAR(64) UNIQUE NOT NULL, \
+            name VARCHAR(64) NOT NULL, \
+            sex CHAR(1), \
+            PRIMARY KEY(id) \
+            );")
+    try_execute(cursor, "CREATE TABLE IF NOT EXISTS Messages( \
+            id VARCHAR(64) UNIQUE NOT NULL, \
+            sender_id VARCHAR(64) NOT NULL, \
+            recipient_id VARCHAR(64) NOT NULL, \
+            time DATETIME NOT NULL, \
+            content VARCHAR(20000) NOT NULL, \
+            PRIMARY KEY (id), \
+            FOREIGN KEY (sender_id) REFERENCES Interlocutors(id), \
+            FOREIGN KEY (recipient_id) REFERENCES Interlocutors(id) \
+            );")
+    try_execute(cursor, "CREATE TABLE IF NOT EXISTS Retrieving_stats( \
+            contact_id VARCHAR(64) UNIQUE NOT NULL, \
+            updated_time DATETIME NOT NULL, \
+            reached_end BIT NOT NULL, \
+            FOREIGN KEY (contact_id) REFERENCES Interlocutors(id));")
 
-def reset_tables(cursor):
+def try_execute_easy(cursor, str):
     try:
-        cursor.execute("DROP TABLE IF EXISTS Messages;")
-        cursor.execute("DROP TABLE IF EXISTS Interlocutors;")
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-
-def try_command(cursor, command):
-    try:
-        cursor.execute(command)
+        cursor.execute(str)
     except lite.IntegrityError:
         pass
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
 
+def reset_tables(cursor):
+   try_execute(cursor, "DROP TABLE IF EXISTS Messages;")
+   try_execute(cursor, "DROP TABLE IF EXISTS Interlocutors;")
+
 def add_interlocutors(cursor, user, partner):
-    try_command(cursor,
+    try_execute_easy(cursor,
             "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
                 user.id, user.username, 1 if user.gender=="female" else 0))
 
-    try_command(cursor,
+    try_execute_easy(cursor,
             "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
                 partner.id, partner.username, "NULL"))
 
-    try_command(cursor,
+    try_execute_easy(cursor,
             "INSERT INTO Retrieving_stats VALUES ('{}', '{}', {});".format(
         partner.id, datetime.now(), 0))
 
@@ -74,6 +65,9 @@ def date_conversion(s):
 
 
 def insert_message(cursor, msg_id, sender, receiver, datetime, msg):
+    # I am not using try_execute_easy because of syntax errors due to
+    # the string 'msg' not escaped. Escaping with re.sub() or re.escape()
+    # do not seem enough to cover it, so...
     try:
         cursor.execute("INSERT INTO Messages VALUES (?, ?, ?, ?, ?);",
             [msg_id, sender, receiver, datetime, msg])
@@ -100,11 +94,11 @@ def add_message(options, cursor, user, partner, message):
                 date_conversion(message['created_time']), "")
 
 
-def reached_end(options, cursor, partner):
+def reached_end(options, cursor, partner, now):
     try:
         cursor.execute("UPDATE Retrieving_stats SET reached_end=1, \
                 updated_time=? WHERE contact_id=?;",
-                [datetime.now(), partner.id])
+                [now, partner.id])
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
@@ -117,6 +111,7 @@ def loop_messages(options, con, message_page, user, partner):
             FROM Retrieving_stats \
             JOIN Interlocutors ON Interlocutors.id=contact_id\
             WHERE contact_id='{}'".format(partner.id)).fetchone()
+    now = datetime.now()
 
     for i in range(options.n):
         messages = message_page['data']
@@ -128,7 +123,7 @@ def loop_messages(options, con, message_page, user, partner):
         stats[1] == 1 and message['created_time'] > stats[0]):
             if options.debug:
                 print("Synch finished! Last updated: %s " % (stats[0]))
-            return reached_end(options, cur, partner)
+            return reached_end(options, cur, partner, now)
         else:
             time.sleep(10)
             message_page = url_to_json(message_page['paging']['next'])

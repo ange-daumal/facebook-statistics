@@ -35,4 +35,4 @@ if __name__ == "__main__":
         if options.debug:
             print("*** Handling %s" % partner.username)
         fill_database(options, user, partner, inbox)
-        time.sleep(60)
+        time.sleep(20)
