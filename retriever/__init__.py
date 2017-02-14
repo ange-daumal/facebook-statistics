@@ -9,8 +9,9 @@ parser = OptionParser()
 parser.add_option("-l", "--list-contact", type="int", dest="l", default=1,
         help="list l * 18 contacts", metavar="NUMBER")
 
-parser.add_option("-n", "--messages-number", type="int", dest="n", default=1,
-        help="list n * 23 messages", metavar="NUMBER")
+parser.add_option("-n", "--messages-number", type="int", dest="n",
+        help="will retrieve maximum [n] messages per interlocutor/contact",
+        metavar="NUMBER")
 
 parser.add_option("-c", "--contact", type="string", dest="contact",
         action="store",
@@ -36,7 +37,5 @@ parser.add_option("-d", "--debug", dest="debug", action="store_true",
 if __name__ == "__main__":
     user, partners, inbox = select_interlocutors(options)
     for partner in partners:
-        if options.debug:
-            print("*** Handling %s" % partner.username)
         fill_database(options, user, partner, inbox)
         time.sleep(options.s)

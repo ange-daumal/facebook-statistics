@@ -95,35 +95,40 @@ def add_message(options, cursor, user, partner, message):
 
 
 def reached_end(options, cursor, partner, now):
-    try:
-        cursor.execute("UPDATE Retrieving_stats SET reached_end=1, \
-                updated_time=? WHERE contact_id=?;",
-                [now, partner.id])
-        if options.debug:
-            print("Synch finished! Last updated: %s " % now)
-    except lite.Error as e:
-        print("Error: %s" % e.args[0])
-        raise
+    try_execute(cursor, "UPDATE Retrieving_stats SET reached_end=1, \
+            updated_time=\"{}\" WHERE contact_id='{}';".format(now,
+                partner.id))
+    if options.debug:
+        print("Synch finished! Last updated: %s " % now)
 
 
 def loop_messages(options, con, message_page, user, partner):
-    cur = con.cursor()
+    cursor = con.cursor()
+
     # Get messages-retrieving tracking stats
-    stats = cur.execute("SELECT updated_time, reached_end \
+    stats = cursor.execute("SELECT updated_time, reached_end \
             FROM Retrieving_stats \
-            JOIN Interlocutors ON Interlocutors.id=contact_id\
+            JOIN Interlocutors ON Interlocutors.id=contact_id \
             WHERE contact_id='{}'".format(partner.id)).fetchone()
+
     now = datetime.now()
 
-    for i in range(options.n):
+    i = 0
+    while(True): # INFINITE MODE ACTIVATED!
         messages = message_page['data']
         for message in messages:
-            add_message(options, cur, user, partner, message)
+            add_message(options, cursor, user, partner, message)
         con.commit()
+        i += len(messages)
+        if options.debug:
+            print("Commited %d messages since the beginning" % i)
+
+        if options.n and i >= options.n:
+            return
 
         if (not 'paging' in message_page.keys() or
         stats[1] == 1 and message['created_time'] > stats[0]):
-            return reached_end(options, cur, partner, now)
+            return reached_end(options, cursor, partner, now)
         else:
             time.sleep(options.s)
             message_page = url_to_json(message_page['paging']['next'])
@@ -131,7 +136,7 @@ def loop_messages(options, con, message_page, user, partner):
 
 def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
     # Looking for interlocutor
-    for i in range(options.l):
+    while(True):
         for conversation_list in inbox['data']:
             to = conversation_list['to']['data']
             if len(to) <= interlocutor_limit and len(to) > 1:
@@ -140,10 +145,16 @@ def save_messages(options, con, inbox, user, partner, interlocutor_limit=2):
                 if interlocutor['id'] == partner.id:
                     return loop_messages(options, con,
                             conversation_list['comments'], user, partner)
+        if (not 'paging' in inbox.keys() or
+                not 'next' in inbox['paging'].keys()):
+            print("Contact not found.")
+            sys.exit(1)
         inbox = url_to_json(inbox['paging']['next'])
 
 
 def fill_database(options, user, partner, inbox):
+    if options.debug:
+        print("*** Handling %s" % partner.username)
     con = None
     try:
         con = lite.connect("user.db")

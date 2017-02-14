@@ -2,5 +2,7 @@ facebook
 facebook-sdk>=2.0
 urllib3
 urlparse3
+numpy
+matplotlib
 scikit-learn==0.18
 stop-words

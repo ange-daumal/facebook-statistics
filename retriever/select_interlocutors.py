@@ -66,7 +66,7 @@ def select_interlocutors(options):
 
     inbox = None
     try:
-        inbox = graph.get_object(id=user.id, fields="inbox{to, comments}")
+        inbox = graph.get_object(id=user.id, fields="inbox.limit(200){to, comments}")
     except facebook.GraphAPIError as e:
         print('Something went wrong:', e.type, e.message)
         sys.exit(1)

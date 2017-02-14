@@ -29,10 +29,13 @@ def print_result(cursor, cmd, string=None):
 def analyse(options, cursor):
     try:
         if options.debug:
-            print_result(cursor, "SELECT name, count(sender_id) \
+            print_result(cursor, "SELECT name, count(sender_id), \
+                updated_time, reached_end \
                 FROM Messages \
                 JOIN Interlocutors ON Interlocutors.id=sender_id \
-                GROUP BY sender_id ORDER BY count(sender_id) DESC")
+                JOIN Retrieving_stats ON Interlocutors.id=contact_id \
+                GROUP BY sender_id \
+                ORDER BY reached_end DESC, count(sender_id) DESC")
 
         if options.what in ['all', 'ratios']:
             analyse_ratios(options, cursor)
@@ -54,14 +57,6 @@ def read_database(options):
     try:
         con = lite.connect("user.db")
         cursor = con.cursor()
-
-        #TODO: Use result below to check update
-        if options.debug:
-            print_result(cursor, "SELECT name, updated_time, reached_end \
-                FROM Retrieving_stats \
-                JOIN Interlocutors ON Interlocutors.id=contact_id\
-                ORDER BY updated_time DESC")
-
 
         if options.update:
             update_ratios(options, cursor)

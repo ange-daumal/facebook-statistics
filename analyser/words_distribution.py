@@ -2,15 +2,17 @@ import sqlite3 as lite
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
-from stop_words import get_stop_words
 import numpy as np
+import matplotlib.pyplot as plt
+
+from stop_words import get_stop_words
 
 def KL(a, b):
     a = np.asarray(a, dtype=np.float)
     b = np.asarray(b, dtype=np.float)
     return np.sum(np.where(a != 0, a * np.log(a / b), 0))
 
-def clusterise(options, bunch_of_messages, mult):
+def cut(options, bunch_of_messages, mult):
     x_trains = []
     msgs = [msg[0] for msg in bunch_of_messages]
     for i in range(int(options.n / mult) + 1):
@@ -36,11 +38,17 @@ def analyse_words(options, cursor, contact_id):
     tfidf_vect = TfidfVectorizer(analyzer="word", ngram_range=(1, 3),
             stop_words=get_stop_words("french") + get_stop_words("english"))
 
-    for x_train in clusterise(options, bunch_of_messages, mult):
+    x_trains = cut(options, bunch_of_messages, mult)
+    # hard-coded because testing reasons!
+    labels = ['metal', 'photoshop', 'autisme', 'check presence', 'dormir']
+    true_k = len(labels)
+
+    for x_train in x_trains:
         X_train = tfidf_vect.fit_transform(x_train)
         X_trains.append(X_train)
         print()
-        print(tfidf_vect.vocabulary_)
+        print(X_train.shape)
+        #print(tfidf_vect.vocabulary_)
 
     print()
     if options.debug:

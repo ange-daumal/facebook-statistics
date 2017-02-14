@@ -5,6 +5,7 @@ import subprocess
 import collections
 import sys
 import time
+import sqlite3 as lite
 from utils import url_to_json
 
 def read_token():
@@ -32,6 +33,12 @@ def find_contact(options, inbox, USER_ID, interlocutor_limit=2):
         inbox = url_to_json(inbox['paging']['next'])
 
 def pull_contact_list(options, inbox, USER_ID, n_interlocutor=2):
+    try:
+        con = lite.connect("user.db")
+        cursor = con.cursor()
+    except lite.Error as e:
+        print("Error: %s" % e.args[0])
+        raise
     n_contact = 0
     contacts = collections.OrderedDict()
     for i in range(options.l):
@@ -39,12 +46,28 @@ def pull_contact_list(options, inbox, USER_ID, n_interlocutor=2):
             to = conversation_list['to']['data']
             if len(to) <= n_interlocutor and len(to) > 1:
                 interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
-                contacts.update({n_contact : interlocutor})
+
+                msgs = cursor.execute("SELECT name, count(sender_id) \
+                            FROM Messages \
+                            JOIN Interlocutors ON Interlocutors.id=sender_id \
+                            WHERE sender_id='{}' \
+                            GROUP BY sender_id;".format(
+                                interlocutor['id'])).fetchone()
+                if msgs and msgs[1] >= options.n:
+                    if options.debug:
+                        print("Did not add %s (already have %d messages)" %
+                            (msgs[0], msgs[1]))
+                else:
+                    if options.debug:
+                        print("Add %s" % interlocutor['name'])
+                    contacts.update({n_contact : interlocutor})
                 n_contact = len(contacts)
         if not 'paging' in inbox.keys() or not 'next' in inbox['paging'].keys():
+            con.close()
             return contacts
         time.sleep(options.s)
         inbox = url_to_json(inbox['paging']['next'])
+    con.close()
     return contacts
 
 # This is not used, but should be, actually.
