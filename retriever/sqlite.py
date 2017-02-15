@@ -1,6 +1,7 @@
 import sqlite3 as lite
 import sys
 import time
+import re
 from datetime import date, datetime, timedelta
 from utils import url_to_json
 
@@ -50,11 +51,13 @@ def reset_tables(cursor):
 def add_interlocutors(cursor, user, partner):
     try_execute_easy(cursor,
             "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
-                user.id, user.username, 1 if user.gender=="female" else 0))
+                user.id, re.sub(r"([\'])",    r'\\\1',user.username),
+                1 if user.gender=="female" else 0))
 
     try_execute_easy(cursor,
             "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
-                partner.id, partner.username, "NULL"))
+                partner.id, re.sub(r"([\'])",    r'\\\1', partner.username),
+                "NULL"))
 
     try_execute_easy(cursor,
             "INSERT INTO Retrieving_stats VALUES ('{}', '{}', {});".format(

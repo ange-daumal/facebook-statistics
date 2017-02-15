@@ -17,11 +17,9 @@ def cut(options, bunch_of_messages, mult):
     msgs = [msg[0] for msg in bunch_of_messages]
     for i in range(int(options.n / mult) + 1):
         truc = msgs[options.n * i:options.n * (i + 1)]
-        '''
         if options.debug:
             print("%d ([%d:%d => %0.2f]) : %s" % (i, options.n*i,
             options.n * (i+1), len(truc), truc))
-        '''
         x_trains.append(truc)
     return x_trains
 
