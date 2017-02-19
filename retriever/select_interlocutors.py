@@ -77,8 +77,4 @@ def select_interlocutors(options):
         partner = select_contact(options, inbox, user)
         partners = [partner]
 
-    if options.debug:
-        for dude in partners:
-            dude.details()
-
     return user, partners, inbox['inbox']

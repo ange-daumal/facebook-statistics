@@ -53,7 +53,7 @@ def pull_contact_list(options, inbox, USER_ID, n_interlocutor=2):
                             WHERE sender_id='{}' \
                             GROUP BY sender_id;".format(
                                 interlocutor['id'])).fetchone()
-                if msgs and msgs[1] >= options.n:
+                if msgs and options.n and msgs[1] >= options.n:
                     if options.debug:
                         print("Did not add %s (already have %d messages)" %
                             (msgs[0], msgs[1]))

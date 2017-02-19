@@ -36,6 +36,7 @@ def create_tables(cursor):
             FOREIGN KEY (contact_id) REFERENCES Interlocutors(id));")
 
 def try_execute_easy(cursor, str):
+    print(str)
     try:
         cursor.execute(str)
     except lite.IntegrityError:
@@ -51,12 +52,12 @@ def reset_tables(cursor):
 def add_interlocutors(cursor, user, partner):
     try_execute_easy(cursor,
             "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
-                user.id, re.sub(r"([\'])",    r'\\\1',user.username),
+                user.id, re.sub(r"([\'])",    r"''", user.username),
                 1 if user.gender=="female" else 0))
 
     try_execute_easy(cursor,
             "INSERT INTO Interlocutors VALUES ('{}', '{}', {});".format(
-                partner.id, re.sub(r"([\'])",    r'\\\1', partner.username),
+                partner.id, re.sub(r"([\'])", r"''", partner.username),
                 "NULL"))
 
     try_execute_easy(cursor,
