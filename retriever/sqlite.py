@@ -36,7 +36,6 @@ def create_tables(cursor):
             FOREIGN KEY (contact_id) REFERENCES Interlocutors(id));")
 
 def try_execute_easy(cursor, str):
-    print(str)
     try:
         cursor.execute(str)
     except lite.IntegrityError:

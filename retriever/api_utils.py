@@ -32,6 +32,36 @@ def find_contact(options, inbox, USER_ID, interlocutor_limit=2):
         time.sleep(options.s)
         inbox = url_to_json(inbox['paging']['next'])
 
+def has_reached_end(options, cursor, interlocutor_id):
+   stats = cursor.execute("SELECT updated_time, reached_end \
+           FROM Retrieving_stats \
+           JOIN Interlocutors ON Interlocutors.id=contact_id \
+           WHERE contact_id='{}'".format(interlocutor_id)).fetchone()
+   return (stats and stats[1] == 1)
+
+
+def has_n_messages(options, cursor, interlocutor_id):
+   msgs = cursor.execute("SELECT name, count(sender_id) \
+               FROM Messages \
+               JOIN Interlocutors ON Interlocutors.id=sender_id \
+               WHERE sender_id='{}' \
+               GROUP BY sender_id;".format(interlocutor_id)).fetchone()
+   return (msgs and options.n and msgs[1] >= options.n)
+
+def handle_interlocutor(options, cursor, contacts, interlocutor):
+    if has_n_messages(options, cursor, interlocutor['id']):
+        if options.debug:
+            print("Did not add %s: too much messages" % (interlocutor['name']))
+    elif options.new and has_reached_end(options, cursor, interlocutor['id']):
+        if options.debug:
+            print("Did not add %s: reached end" % (interlocutor['name']))
+    else:
+        if options.debug:
+            print("Add %s" % interlocutor['name'])
+        n_contact = len(contacts)
+        contacts.update({n_contact : interlocutor})
+    return contacts
+
 def pull_contact_list(options, inbox, USER_ID, n_interlocutor=2):
     try:
         con = lite.connect("user.db")
@@ -39,32 +69,20 @@ def pull_contact_list(options, inbox, USER_ID, n_interlocutor=2):
     except lite.Error as e:
         print("Error: %s" % e.args[0])
         raise
-    n_contact = 0
+
     contacts = collections.OrderedDict()
     for i in range(options.l):
         for conversation_list in inbox['data']:
             to = conversation_list['to']['data']
             if len(to) <= n_interlocutor and len(to) > 1:
-                interlocutor = to[0] if to[1]['id'] == USER_ID else to[1]
+                contacts = handle_interlocutor(options, cursor, contacts,
+                    to[0] if to[1]['id'] == USER_ID else to[1])
 
-                msgs = cursor.execute("SELECT name, count(sender_id) \
-                            FROM Messages \
-                            JOIN Interlocutors ON Interlocutors.id=sender_id \
-                            WHERE sender_id='{}' \
-                            GROUP BY sender_id;".format(
-                                interlocutor['id'])).fetchone()
-                if msgs and options.n and msgs[1] >= options.n:
-                    if options.debug:
-                        print("Did not add %s (already have %d messages)" %
-                            (msgs[0], msgs[1]))
-                else:
-                    if options.debug:
-                        print("Add %s" % interlocutor['name'])
-                    contacts.update({n_contact : interlocutor})
-                n_contact = len(contacts)
+        # End of inbox
         if not 'paging' in inbox.keys() or not 'next' in inbox['paging'].keys():
             con.close()
             return contacts
+
         time.sleep(options.s)
         inbox = url_to_json(inbox['paging']['next'])
     con.close()

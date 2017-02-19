@@ -22,6 +22,10 @@ parser.add_option("-a", "--all", dest="all", action="store_true",
         help="do not specify a contact, fill database with all of them",
         metavar="BOOLEAN")
 
+parser.add_option("-N", "--new", dest="new", action="store_true",
+        help="only look for new contacts",
+        metavar="BOOLEAN")
+
 parser.add_option("-r", "--reset", dest="reset", action="store_true",
         help="reset database", metavar="BOOLEAN")
 
